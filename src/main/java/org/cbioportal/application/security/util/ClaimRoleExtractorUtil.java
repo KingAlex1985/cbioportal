@@ -14,16 +14,25 @@ import org.springframework.security.authentication.BadCredentialsException;
 
 public class ClaimRoleExtractorUtil {
   private static final Logger log = LoggerFactory.getLogger(ClaimRoleExtractorUtil.class);
+  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
+  static {
+    OBJECT_MAPPER.registerModule(new JavaTimeModule());
+  }
+
+  /** Private constructor to prevent instantiation */
+  private ClaimRoleExtractorUtil() {
+    // Prevent instantiation
+    throw new IllegalStateException("Utility class");
+  }
 
   public static Collection<String> extractClientRoles(
       final Map<String, Object> claims, final String jwtRolesPath) {
     try {
       // Convert the map to a JSON string
-      ObjectMapper objectMapper = new ObjectMapper();
-      objectMapper.registerModule(new JavaTimeModule());
-      String jsonString = objectMapper.writeValueAsString(claims);
+      String jsonString = OBJECT_MAPPER.writeValueAsString(claims);
 
-      JsonNode rolesCursor = new ObjectMapper().readTree(jsonString);
+      JsonNode rolesCursor = OBJECT_MAPPER.readTree(jsonString);
       return extractClientRoles(rolesCursor, jwtRolesPath);
     } catch (Exception e) {
       log.error("Error extracting claims as a json string");
@@ -34,7 +43,7 @@ public class ClaimRoleExtractorUtil {
   public static Collection<String> extractClientRoles(
       final String claims, final String jwtRolesPath) {
     try {
-      JsonNode rolesCursor = new ObjectMapper().readTree(claims);
+      JsonNode rolesCursor = OBJECT_MAPPER.readTree(claims);
       return extractClientRoles(rolesCursor, jwtRolesPath);
     } catch (Exception e) {
       log.error("Error converting Json String to JsonNode Object");
@@ -55,7 +64,7 @@ public class ClaimRoleExtractorUtil {
         }
       }
       if (rolesCursor.isTextual()) {
-        rolesCursor = new ObjectMapper().readTree(rolesCursor.asText());
+        rolesCursor = OBJECT_MAPPER.readTree(rolesCursor.asText());
       }
       return StreamSupport.stream(rolesCursor.spliterator(), false)
           .map(JsonNode::asText)
